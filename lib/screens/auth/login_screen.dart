@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -143,11 +144,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 );
 
                                 if (success && context.mounted) {
-                                  // Navegar al Home (Temporalmente mostramos un SnackBar)
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("¡Bienvenido!")),
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const MainScreen()),
+                                    (route) => false,
                                   );
-                                  // TODO: Navigator.pushReplacementNamed(context, '/home');
                                 }
                               }
                             },
