@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/theme/app_theme.dart';
 import 'home/home_view.dart';
 import 'user_profile/profile_view.dart'; 
+import 'vet_search/vet_search_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,8 +16,8 @@ class _MainScreenState extends State<MainScreen> {
 
   // Lista de pantallas para navegar
   final List<Widget> _screens = [
-    const Center(child: Text("Buscador de Veterinarias")), // Placeholder Indice 0
-    const HomeView(),                                      // Indice 1 (La que haremos ahora)
+    const VetSearchScreen(),
+    const HomeView(),                                      
     const ProfileView(),
   ];
 
