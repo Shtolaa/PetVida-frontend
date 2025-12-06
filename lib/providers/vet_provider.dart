@@ -12,6 +12,9 @@ class VetProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  VeterinariaDetalle? _seleccionada;
+  VeterinariaDetalle? get seleccionada => _seleccionada;
+
   // Filtros actuales
   String _busquedaActual = '';
   bool _soloAbierto = false;
@@ -51,5 +54,20 @@ class VetProvider extends ChangeNotifier {
     _soloAbierto = !_soloAbierto;
     cargarVeterinarias(); // Recargamos inmediato
     // No necesitamos notifyListeners aquí porque cargarVeterinarias ya lo hace
+  }
+  Future<void> cargarDetalleVeterinaria(int id) async {
+    _isLoading = true;
+    _seleccionada = null; // Limpiamos la anterior para que no parpadee info vieja
+    notifyListeners();
+
+    _seleccionada = await _service.getVeterinariaDetalle(id);
+
+    _isLoading = false;
+    notifyListeners();
+  }
+  // Limpiar selección al salir
+  void limpiarSeleccion() {
+    _seleccionada = null;
+    notifyListeners();
   }
 }

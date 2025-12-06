@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme/app_theme.dart';
 import '../../models/vet_model.dart';
 import '../../providers/vet_provider.dart';
+import 'vet_profile_screen.dart';
 
 class VetSearchScreen extends StatefulWidget {
   const VetSearchScreen({super.key});
@@ -172,12 +173,17 @@ class _VeterinariaCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // TODO: Navegar al detalle de la veterinaria
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Seleccionaste: ${vet.nombre}")),
-            );
-          },
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => VetProfileScreen(
+                    veterinariaId: vet.id,
+                    nombrePlaceholder: vet.nombre,
+                  ),
+                ),
+              );
+            },
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(

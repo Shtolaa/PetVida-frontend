@@ -60,4 +60,22 @@ class VetService {
       return [];
     }
   }
+  // GET /veterinarias/{id}
+  Future<VeterinariaDetalle?> getVeterinariaDetalle(int id) async {
+    final url = Uri.parse('${Environment.baseUrl}/veterinarias/$id');
+
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(url, headers: headers);
+
+      if (response.statusCode == 200) {
+        return VeterinariaDetalle.fromJson(jsonDecode(response.body));
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error detalle vet: $e');
+      return null;
+    }
+  }
 }
