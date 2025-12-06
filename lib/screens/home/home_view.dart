@@ -146,55 +146,104 @@ class _HomeViewState extends State<HomeView> {
                               ],
                             ),
                           )
-                        : ListView.builder(
-                            shrinkWrap: true, // Importante para que funcione dentro del ScrollView
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: homeProvider.citas.length,
-                            itemBuilder: (context, index) {
-                              final cita = homeProvider.citas[index];
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.neutral200),
-                                ),
-                                child: Row(
-                                  children: [
-                                    // Fecha (Columna izquierda)
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary100.withOpacity(0.5),
-                                        borderRadius: BorderRadius.circular(12),
+                            :ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: homeProvider.citas.length,
+                              itemBuilder: (context, index) {
+                                final cita = homeProvider.citas[index];
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppColors.neutral200),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      // Fecha (Columna izquierda)
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary100.withOpacity(0.5),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(Icons.access_time_filled, color: AppColors.primary400),
                                       ),
-                                      child: const Icon(Icons.access_time_filled, color: AppColors.primary400),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    // Datos de la cita
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            cita.titulo, // "Lunes 28/10 - 18:00"
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.neutral1000),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            cita.subtitulo, // "Luna - Clínica..."
-                                            style: const TextStyle(color: AppColors.neutral500, fontSize: 14),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
+                                      const SizedBox(width: 16),
+                                      
+                                      // Datos de la cita
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              cita.titulo, // "Lunes 28/10 - 18:00"
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.neutral1000),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              cita.subtitulo, // "Luna - Clínica..."
+                                              style: const TextStyle(color: AppColors.neutral500, fontSize: 14),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+
+                                      // --- NUEVO: Botón Cancelar ---
+                                      IconButton(
+                                        icon: const Icon(Icons.cancel_outlined, color: AppColors.error),
+                                        tooltip: "Cancelar Cita",
+                                        onPressed: () {
+                                          // Mostramos el Popup de confirmación
+                                          showDialog(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              title: const Text("Cancelar Cita"),
+                                              content: const Text("¿Estás seguro de que deseas cancelar esta hora? Esta acción no se puede deshacer."),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(ctx), // Cerrar sin hacer nada
+                                                  child: const Text("Volver"),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () async {
+                                                    Navigator.pop(ctx); // Cerrar alerta
+                                                    
+                                                    // Llamar al provider para cancelar
+                                                    final exito = await homeProvider.cancelarCita(cita.idCita);
+                                                    
+                                                    if (context.mounted) {
+                                                      if (exito) {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(content: Text("Cita cancelada correctamente"))
+                                                        );
+                                                      } else {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text("Error al cancelar. Intenta más tarde."),
+                                                            backgroundColor: AppColors.error,
+                                                          )
+                                                        );
+                                                      }
+                                                    }
+                                                  },
+                                                  style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                                  child: const Text("Sí, Cancelar"),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      )
+                                      // -----------------------------
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
                     ],
                   ),
                 ),

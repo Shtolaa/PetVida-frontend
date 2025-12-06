@@ -33,4 +33,23 @@ class WebDashboardProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+  Future<bool> cancelarCita(int idCita) async {
+    // 1. Mostramos carga (opcional, o dejamos que el spinner de la tabla actúe al recargar)
+    _isLoading = true;
+    notifyListeners();
+
+    // 2. Llamada al servicio
+    final exito = await _service.cancelarCita(idCita);
+
+    if (exito) {
+      // 3. Si funcionó, recargamos los datos del dashboard para refrescar la tabla
+      await cargarDashboard(); 
+    } else {
+      // Si falló, quitamos el loading
+      _isLoading = false;
+      notifyListeners();
+    }
+    
+    return exito;
+  }
 }

@@ -67,4 +67,24 @@ class HomeService {
       return [];
     }
   }
+  // 3. Cancelar Cita (PATCH /citas/{id}/cancelar)
+  Future<bool> cancelarCita(int idCita) async {
+    final url = Uri.parse('${Environment.baseUrl}/citas/$idCita/cancelar');
+    
+    try {
+      final headers = await _getHeaders();
+      // Usamos PATCH porque solo cambiamos el estado, no borramos el recurso
+      final response = await http.patch(url, headers: headers);
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      } else {
+        print('Error cancelando cita: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error conexión cancelar: $e');
+      return false;
+    }
+  }
 }

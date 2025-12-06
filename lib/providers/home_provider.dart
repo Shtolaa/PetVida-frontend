@@ -31,4 +31,15 @@ class HomeProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+  Future<bool> cancelarCita(int idCita) async {
+    // 1. Llamamos al servicio
+    final exito = await _homeService.cancelarCita(idCita);
+
+    if (exito) {
+      // 2. Si fue exitoso, recargamos la lista para que la UI se actualice sola
+      await cargarDatosHome(); 
+    }
+    
+    return exito;
+  }
 }

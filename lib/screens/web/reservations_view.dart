@@ -82,12 +82,68 @@ class ReservationsView extends StatelessWidget {
                           )),
                           DataCell(Text(cita.nombreMascota)),
                           DataCell(StatusBadge(status: cita.estado)),
-                          DataCell(IconButton(
-                            icon: const Icon(Icons.more_vert, color: AppColors.neutral500),
-                            onPressed: () {
-                              // TODO: Mostrar menú de acciones (Editar, Cancelar)
-                            },
-                          )),
+                          DataCell(
+                              Row(
+                                mainAxisSize: MainAxisSize.min, // Para que no ocupe todo el ancho
+                                children: [
+                                  // Botón Editar (Placeholder visual)
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined, color: AppColors.primary400, size: 20),
+                                    tooltip: "Editar Cita",
+                                    onPressed: () {},
+                                  ),
+                                  
+                                  const SizedBox(width: 8),
+                                  
+                                  // Botón Cancelar (ROJO)
+                                  IconButton(
+                                    icon: const Icon(Icons.cancel_outlined, color: AppColors.error, size: 20),
+                                    tooltip: "Cancelar Cita",
+                                    onPressed: () {
+                                      // Lógica del Popup
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: const Text("Cancelar Cita"),
+                                          content: Text("¿Estás seguro de cancelar la cita de ${cita.nombreMascota}?"),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(ctx),
+                                              child: const Text("Volver"),
+                                            ),
+                                            TextButton(
+                                              onPressed: () async {
+                                                Navigator.pop(ctx); // Cerrar alerta
+                                                
+                                                // Llamar al provider
+                                                final exito = await provider.cancelarCita(cita.idCita);
+                                                
+                                                if (context.mounted) {
+                                                  if (exito) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(content: Text("Cita cancelada correctamente"))
+                                                    );
+                                                  } else {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text("Error al cancelar"),
+                                                        backgroundColor: AppColors.error,
+                                                      )
+                                                    );
+                                                  }
+                                                }
+                                              },
+                                              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                              child: const Text("Confirmar Cancelación"),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       );
                     }).toList(),
