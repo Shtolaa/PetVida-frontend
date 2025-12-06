@@ -27,7 +27,7 @@ class ProfileService {
     final userId = await _getUserId();
     if (userId.isEmpty) return null;
 
-    final url = Uri.parse('${Environment.baseUrl}/usuarios/$userId');
+    final url = Uri.parse('${Environment.baseUrl}/usuario/$userId');
 
     try {
       final headers = await _getHeaders();
@@ -50,28 +50,50 @@ class ProfileService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear(); // Borra token, user_id y cualquier otra cosa
   }
-  // 3. Agregar Mascota (POST /mascotas)
+// 3. Agregar Mascota (POST /mascotas con Multipart y ID automático)
   Future<bool> createMascota(Map<String, dynamic> mascotaData) async {
     final url = Uri.parse('${Environment.baseUrl}/mascotas');
     
     try {
-      final headers = await _getHeaders();
-      // Aseguramos que el usuarioId vaya en el cuerpo si la API lo pide explícitamente
-      // aunque idealmente el backend debería sacarlo del Token.
-      // Según tu OpenAPI, el body pide "usuarioId".
-      final userId = await _getUserId();
-      mascotaData['usuarioId'] = int.tryParse(userId) ?? 0;
+      // 1. OBTENEMOS TOKEN Y USER ID GUARDADOS
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token') ?? '';
+      final userIdStr = prefs.getString('user_id');
 
-      final response = await http.post(
-        url,
-        headers: headers,
-        body: jsonEncode(mascotaData),
-      );
+      // Validación de seguridad
+      if (userIdStr == null) {
+        print("ERROR CRÍTICO: No se encontró el ID del usuario en sesión.");
+        return false;
+      }
+
+      // Convertimos el ID a número (Java espera Long/Integer)
+      final int ownerId = int.parse(userIdStr);
+
+      // 2. Preparamos la petición Multipart
+      var request = http.MultipartRequest('POST', url);
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // 3. TRADUCCIÓN DE CAMPOS (Español -> Inglés para Java)
+      final datosParaJava = {
+        "name": mascotaData['nombre'],
+        "species": mascotaData['especie'], 
+        "breed": mascotaData['raza'],
+        "gender": mascotaData['genero'],
+        "birthDate": mascotaData['fechaNacimiento'],
+        "ownerId": ownerId // <--- AQUÍ USAMOS EL ID REAL QUE RECUPERAMOS
+      };
+
+      // 4. Agregamos el JSON al campo 'data'
+      request.fields['data'] = jsonEncode(datosParaJava);
+
+      // 5. Enviamos
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         return true;
       } else {
-        print('Error creando mascota: ${response.body}');
+        print('Error creando mascota (Back): ${response.body}');
         return false;
       }
     } catch (e) {
@@ -115,19 +137,34 @@ class ProfileService {
     }
   }
 
-  // 5. Modificar Mascota (PUT /mascotas/{id})
-  // ASUMIMOS que este endpoint existirá.
+  // 5. Modificar Mascota (PATCH /mascotas/{id} con Multipart)
   Future<bool> updateMascota(int mascotaId, Map<String, dynamic> datos) async {
-    final url = Uri.parse('${Environment.baseUrl}/mascotas/$mascotaId'); // Asumiendo PUT
+    final url = Uri.parse('${Environment.baseUrl}/mascotas/$mascotaId');
+    final token = (await SharedPreferences.getInstance()).getString('jwt_token') ?? '';
 
     try {
-      final headers = await _getHeaders();
-      // Usamos PUT para actualizar completo, o PATCH para parcial
-      final response = await http.put( 
-        url,
-        headers: headers,
-        body: jsonEncode(datos),
-      );
+      // CAMBIO CLAVE: Usamos MultipartRequest en lugar de post/put simple
+      var request = http.MultipartRequest('PATCH', url);
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // El backend espera los datos en un campo llamado 'data' como string JSON
+      // Mapeamos los nombres de campos de Flutter a los del DTO de Java (PetUpdateDTO)
+      final datosParaBackend = {
+        "nombre": datos['nombre'],
+        "especie": datos['especie'],
+        "raza": datos['raza'],
+        "genero": datos['genero'],
+        "fechaNacimiento": datos['fechaNacimiento']
+      };
+
+      request.fields['data'] = jsonEncode(datosParaBackend);
+
+      // Si en el futuro agregas foto, sería:
+      // if (pathFoto != null) request.files.add(...)
+
+      // Enviamos
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
         return true;
@@ -136,6 +173,7 @@ class ProfileService {
         return false;
       }
     } catch (e) {
+      print('Error conexión update mascota: $e');
       return false;
     }
   }

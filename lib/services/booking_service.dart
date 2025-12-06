@@ -21,8 +21,7 @@ class BookingService {
   }
 
   // 1. Obtener Horarios Disponibles
-  Future<DisponibilidadResponse?> getHorarios(int vetId, String fecha) async {
-    // endpoint: /veterinarias/{id}/horarios?fecha=YYYY-MM-DD
+Future<DisponibilidadResponse?> getHorarios(int vetId, String fecha) async {
     final url = Uri.parse('${Environment.baseUrl}/veterinarias/$vetId/horarios?fecha=$fecha');
 
     try {
@@ -30,7 +29,50 @@ class BookingService {
       final response = await http.get(url, headers: headers);
 
       if (response.statusCode == 200) {
-        return DisponibilidadResponse.fromJson(jsonDecode(response.body));
+        // 1. Decodificamos como LISTA (porque el back envía ["09:00", "09:30"])
+        List<dynamic> listaPlana = jsonDecode(response.body);
+        
+        // 2. Convertimos a Strings y limpiamos segundos si vienen (09:00:00 -> 09:00)
+        List<String> horarios = listaPlana.map((e) {
+          String h = e.toString();
+          if (h.length > 5) return h.substring(0, 5); // Cortamos los segundos
+          return h;
+        }).toList();
+
+        // 3. Separamos manualmente en Mañana (< 13:00) y Tarde (>= 13:00)
+        List<String> manana = [];
+        List<String> tarde = [];
+
+        for (var hora in horarios) {
+          int h = int.parse(hora.split(':')[0]);
+          if (h < 13) {
+            manana.add(hora);
+          } else {
+            tarde.add(hora);
+          }
+        }
+
+        // 4. Construimos la respuesta que la UI espera
+        List<BloqueHorario> bloquesGenerados = [];
+        
+        if (manana.isNotEmpty) {
+          bloquesGenerados.add(BloqueHorario(titulo: "Mañana", horarios: manana));
+        }
+        if (tarde.isNotEmpty) {
+          bloquesGenerados.add(BloqueHorario(titulo: "Tarde", horarios: tarde));
+        }
+        
+        // Si ambos están vacíos, mandamos lista vacía
+        if (bloquesGenerados.isEmpty && horarios.isEmpty) {
+           // Fallback visual si la lista viene vacía
+           return DisponibilidadResponse(fechaConsultada: fecha, bloques: []);
+        }
+
+        return DisponibilidadResponse(
+          fechaConsultada: fecha,
+          bloques: bloquesGenerados
+        );
+
       } else {
         print('Error horarios: ${response.body}');
         return null;

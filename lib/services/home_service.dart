@@ -36,7 +36,7 @@ class HomeService {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         return data.map((json) => CitaAgendada.fromJson(json)).toList();
-      } else {
+      }else {
         print('Error fetching citas: ${response.statusCode}');
         return [];
       }

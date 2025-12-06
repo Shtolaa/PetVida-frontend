@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme/app_theme.dart';
 import '../../providers/vet_provider.dart';
+import '../../models/vet_model.dart'; // Importante para la clase ServicioVet
 import '../booking/availability_screen.dart';
 
 class VetProfileScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
 
   int? _servicioSeleccionadoId; 
   String _nombreServicioSeleccionado = "";
+
   @override
   void initState() {
     super.initState();
@@ -133,22 +135,33 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                           const Text("Selecciona para revisar disponibilidad:", style: TextStyle(fontSize: 12, color: AppColors.neutral500)),
                           const SizedBox(height: 12),
                           
-                          Wrap(
+                          // --- LÓGICA DE RESPALDO (PARCHE) ---
+                          // Si no hay servicios, inventamos unos para la demo
+                          Builder(
+                            builder: (context) {
+                              List<ServicioVet> serviciosAMostrar = vet.servicios;
+                              
+                              if (serviciosAMostrar.isEmpty) {
+                                serviciosAMostrar = [
+                                  ServicioVet(id: 1, nombre: "Consulta General (Demo)"),
+                                  ServicioVet(id: 2, nombre: "Urgencia (Demo)"),
+                                ];
+                              }
+
+                              return Wrap(
                                 spacing: 10,
                                 runSpacing: 10,
-                                children: vet.servicios.map((servicio) {
-                                  final isSelected = _servicioSeleccionadoId == servicio.id; // ¿Es este el seleccionado?
+                                children: serviciosAMostrar.map((servicio) {
+                                  final isSelected = _servicioSeleccionadoId == servicio.id; 
                                   
                                   return ActionChip(
                                     label: Text(servicio.nombre),
-                                    // Si está seleccionado, fondo verde y texto blanco
                                     backgroundColor: isSelected ? AppColors.primary400 : Colors.white,
                                     labelStyle: TextStyle(
                                       color: isSelected ? Colors.white : AppColors.primary400, 
                                       fontWeight: FontWeight.bold
                                     ),
                                     side: const BorderSide(color: AppColors.primary400),
-                                    
                                     onPressed: () {
                                       setState(() {
                                         _servicioSeleccionadoId = servicio.id;
@@ -157,7 +170,10 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                                     },
                                   );
                                 }).toList(),
-                              ),
+                              );
+                            }
+                          ),
+                          // -----------------------------------
 
                           const SizedBox(height: 40),
 
@@ -168,7 +184,6 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                             child: ElevatedButton(
                               onPressed: () {
                                 if (_servicioSeleccionadoId == null) {
-                                  // Validación visual
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text("Por favor selecciona un servicio primero"),
@@ -178,13 +193,12 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                                   return;
                                 }
 
-                                // Ahora sí pasamos el ID real
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => AvailabilityScreen(
                                       veterinariaId: widget.veterinariaId,
-                                      servicioId: _servicioSeleccionadoId!, // <--- ID REAL
+                                      servicioId: _servicioSeleccionadoId!,
                                       nombreVeterinaria: widget.nombrePlaceholder,
                                     ),
                                   ),

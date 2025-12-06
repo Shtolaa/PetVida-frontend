@@ -78,18 +78,23 @@ class _HomeViewState extends State<HomeView> {
                                 itemCount: homeProvider.recomendadas.length,
                                 itemBuilder: (context, index) {
                                   final vet = homeProvider.recomendadas[index];
-                                  return Container(
-                                    width: 240,
-                                    margin: const EdgeInsets.only(right: 16),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      color: Colors.white,
-                                      image: DecorationImage(
-                                        image: NetworkImage(vet.imagenUrl), // Asegúrate que la URL sea válida
-                                        fit: BoxFit.cover,
-                                        colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken)
-                                      )
-                                    ),
+                                    return Container(
+                                      width: 240,
+                                      margin: const EdgeInsets.only(right: 16),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(16),
+                                        color: AppColors.neutral200, // Color de fondo por si la imagen falla
+                                        image: DecorationImage(
+                                          // --- CORRECCIÓN AQUÍ ---
+                                          // Validamos si tiene URL válida. Si no, usamos una imagen de prueba (Placeholder)
+                                          image: (vet.imagenUrl.isNotEmpty && vet.imagenUrl.startsWith("http"))
+                                              ? NetworkImage(vet.imagenUrl)
+                                              : const NetworkImage("https://placehold.co/600x400/8EB232/white?text=Veterinaria"), 
+                                          // -----------------------
+                                          fit: BoxFit.cover,
+                                          colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken)
+                                        )
+                                      ),
                                     child: Stack(
                                       children: [
                                         Positioned(

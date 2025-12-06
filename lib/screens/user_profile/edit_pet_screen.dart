@@ -17,7 +17,8 @@ class _EditPetScreenState extends State<EditPetScreen> {
   final _nombreController = TextEditingController();
   final _razaController = TextEditingController(); // No viene en el resumen, placeholder
   final _fechaController = TextEditingController(); // Placeholder
-  
+  final List<String> _especiesPermitidas = ["Canino", "Felino", "Ave", "Exotico"];
+
   String _especieSeleccionada = 'Canino';
   String _generoSeleccionado = 'Macho';
 
@@ -26,9 +27,21 @@ class _EditPetScreenState extends State<EditPetScreen> {
     super.initState();
     // Llenar datos (Lo que tengamos disponible en MascotaResumen)
     _nombreController.text = widget.mascota.nombre;
-    _especieSeleccionada = widget.mascota.especie.isEmpty ? 'Canino' : widget.mascota.especie;
+  
+    String especieEntrante = widget.mascota.especie;
     // Como MascotaResumen es limitado, los otros campos quedarán vacíos o default
     // Idealmente deberíamos llamar a un GET /mascotas/{id} para tener todo el detalle antes de editar
+
+    if (especieEntrante == "Perro") especieEntrante = "Canino";
+    if (especieEntrante == "Gato") especieEntrante = "Felino";
+
+    // Verificación final de seguridad:
+    if (_especiesPermitidas.contains(especieEntrante)) {
+      _especieSeleccionada = especieEntrante;
+    } else {
+      // Si llega algo raro (ej: "Lagarto"), usamos el primero por defecto para no crashear
+      _especieSeleccionada = _especiesPermitidas.first;
+    }
   }
 
   @override
@@ -72,6 +85,7 @@ class _EditPetScreenState extends State<EditPetScreen> {
                 DropdownMenuItem(value: "Canino", child: Text("Perro")),
                 DropdownMenuItem(value: "Felino", child: Text("Gato")),
                 DropdownMenuItem(value: "Ave", child: Text("Ave")),
+                DropdownMenuItem(value: "Exotico", child: Text("Exótico")),
               ],
               onChanged: (val) => setState(() => _especieSeleccionada = val!),
             ),

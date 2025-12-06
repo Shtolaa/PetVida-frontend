@@ -9,8 +9,15 @@ import 'providers/vet_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/web_dashboard_provider.dart';
 import 'screens/web/web_layout_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+void main() async {
+  // Aseguramos que los widgets estén listos antes de inicializar cosas asíncronas
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Inicializamos el formateo de fechas para español (y otros si los necesitas)
+  await initializeDateFormatting('es'); 
+
   runApp(const PetVidaApp());
 }
 

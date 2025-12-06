@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme/app_theme.dart';
 import '../../providers/profile_provider.dart';
-import '../auth/login_screen.dart';
-import 'add_pet_screen.dart';
+import '../auth/login_screen.dart'; 
+import 'add_pet_screen.dart'; 
 import 'edit_profile_screen.dart';
 import 'edit_pet_screen.dart';
 
@@ -51,12 +51,11 @@ class _ProfileViewState extends State<ProfileView> {
       appBar: AppBar(
         title: const Text("Cuenta"),
         actions: [
-          // Botón Editar (Solo visual por ahora)
           TextButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
             },
-            child: const Text("Editar"),
+            child: const Text("Editar", style: TextStyle(color: AppColors.primary400, fontWeight: FontWeight.bold)),
           )
         ],
       ),
@@ -68,16 +67,18 @@ class _ProfileViewState extends State<ProfileView> {
             // 1. CABECERA DE PERFIL
             Row(
               children: [
+                // --- CORRECCIÓN FOTO USUARIO ---
                 CircleAvatar(
                   radius: 35,
                   backgroundColor: AppColors.neutral200,
-                  backgroundImage: (user.fotoPerfilUrl.isNotEmpty) 
+                  backgroundImage: (user.fotoPerfilUrl.isNotEmpty && user.fotoPerfilUrl.startsWith("http")) 
                       ? NetworkImage(user.fotoPerfilUrl) 
                       : null,
-                  child: (user.fotoPerfilUrl.isEmpty) 
+                  child: (user.fotoPerfilUrl.isEmpty || !user.fotoPerfilUrl.startsWith("http")) 
                       ? const Icon(Icons.person, size: 40, color: AppColors.neutral500)
                       : null,
                 ),
+                // -------------------------------
                 const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,9 +106,9 @@ class _ProfileViewState extends State<ProfileView> {
                 TextButton.icon(
                   onPressed: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AddPetScreen()),
-                      );
+                      context,
+                      MaterialPageRoute(builder: (context) => const AddPetScreen()),
+                    );
                   },
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text("Agregar Mascota"),
@@ -117,7 +118,6 @@ class _ProfileViewState extends State<ProfileView> {
             ),
             const SizedBox(height: 10),
 
-            // Lista de mascotas
             if (user.mascotas.isEmpty)
               Container(
                 width: double.infinity,
@@ -141,23 +141,25 @@ class _ProfileViewState extends State<ProfileView> {
                       border: Border.all(color: AppColors.neutral200),
                     ),
                     child: ListTile(
+                      // --- CORRECCIÓN FOTO MASCOTA ---
                       leading: CircleAvatar(
-                        backgroundImage: (mascota.fotoUrl.isNotEmpty) 
+                        backgroundColor: AppColors.primary100,
+                        backgroundImage: (mascota.fotoUrl.isNotEmpty && mascota.fotoUrl.startsWith("http")) 
                           ? NetworkImage(mascota.fotoUrl) 
                           : null,
-                        backgroundColor: AppColors.primary100,
-                        child: (mascota.fotoUrl.isEmpty) 
+                        child: (mascota.fotoUrl.isEmpty || !mascota.fotoUrl.startsWith("http")) 
                           ? const Icon(Icons.pets, color: AppColors.primary400)
                           : null,
                       ),
+                      // -------------------------------
                       title: Text(mascota.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(mascota.especie),
-                      trailing: IconButton( // Cambiamos el ícono por un botón de editar
-                          icon: const Icon(Icons.edit, color: AppColors.primary400),
-                          onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => EditPetScreen(mascota: mascota)));
-                          },
-                        ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit, color: AppColors.primary400),
+                        onPressed: () {
+                           Navigator.push(context, MaterialPageRoute(builder: (_) => EditPetScreen(mascota: mascota)));
+                        },
+                      ),
                     ),
                   );
                 },
@@ -170,7 +172,7 @@ class _ProfileViewState extends State<ProfileView> {
             
             const SizedBox(height: 10),
             
-            // Botón Cerrar Sesión (Rojo)
+            // Botón Cerrar Sesión
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
