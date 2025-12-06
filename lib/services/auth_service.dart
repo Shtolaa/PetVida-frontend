@@ -22,23 +22,23 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = LoginResponse.fromJson(jsonDecode(response.body));
         
-        // 1. Decodificar el token para obtener los datos ocultos
         Map<String, dynamic> decodedToken = JwtDecoder.decode(data.token);
         
-        // IMPRIMIR PARA DEBUGGEAR:
-        // Así verás en consola exactamente cómo se llama el campo del ID en tu backend
-        print("Payload del Token: $decodedToken");
+        // 1. Obtener ID (Ya lo teníamos)
+        String userId = decodedToken['id']?.toString() 
+            ?? decodedToken['userId']?.toString() 
+            ?? decodedToken['sub'] 
+            ?? '';
 
-        // 2. Extraer el ID. 
-        // IMPORTANTE: Revisa tu consola. Spring Boot suele poner el usuario en "sub" 
-        // o en un campo custom como "userId" o "id". 
-        // Aquí asumiré que viene como "id" o "userId", si falla, cambiaremos esta línea.
-        String userId = decodedToken['id']?.toString() ?? decodedToken['userId']?.toString() ?? decodedToken['sub'] ?? '';
+        // 2. NUEVO: Obtener ROL
+        // Revisa en tu consola cómo viene el rol. Usualmente es 'role', 'roles' o 'authorities'.
+        // Asumiremos 'role' por tu JSON de registro.
+        String role = decodedToken['role']?.toString() ?? 'CLIENTE'; 
         
-        // 3. Guardar Token y UserID en el dispositivo
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('jwt_token', data.token);
-        await prefs.setString('user_id', userId); // <-- Guardamos el ID
+        await prefs.setString('user_id', userId);
+        await prefs.setString('user_role', role); // <--- GUARDAMOS EL ROL
         
         return true;
       } else {
@@ -56,7 +56,10 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_id');
   }
-
+  Future<String> getUserRole() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('user_role') ?? 'CLIENTE';
+}
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');

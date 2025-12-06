@@ -26,4 +26,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners(); // Avisa que terminó
     return success;
   }
+  Future<String> getUserRole() async {
+  return await _authService.getUserRole();
+}
 }

@@ -7,6 +7,8 @@ import 'providers/home_provider.dart';
 import 'providers/profile_provider.dart';
 import 'providers/vet_provider.dart';
 import 'providers/booking_provider.dart';
+import 'providers/web_dashboard_provider.dart';
+import 'screens/web/web_layout_screen.dart';
 
 void main() {
   runApp(const PetVidaApp());
@@ -25,6 +27,7 @@ class PetVidaApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => VetProvider()),
         ChangeNotifierProvider(create: (_) => BookingProvider()),
+        ChangeNotifierProvider(create: (_) => WebDashboardProvider()),
       ],
       child: MaterialApp(
         title: 'PetVida',

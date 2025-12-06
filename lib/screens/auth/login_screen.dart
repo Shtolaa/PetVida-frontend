@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../main_screen.dart';
+import '../web/web_layout_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -144,9 +145,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                 );
 
                                 if (success && context.mounted) {
+                                  // 1. Preguntamos al servicio qué rol tiene el usuario
+                                  final role = await authProvider.getUserRole(); // Necesitarás agregar este método al AuthProvider también
+
+                                  Widget nextScreen;
+                                  
+                                  // 2. Decidimos a dónde ir
+                                  if (role == 'VETERINARIO' || role == 'ADMIN') {
+                                    nextScreen = const WebLayoutScreen(); // <--- Importar
+                                  } else {
+                                    nextScreen = const MainScreen();      // <--- Importar
+                                  }
+
+                                  // 3. Navegamos
                                   Navigator.pushAndRemoveUntil(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const MainScreen()),
+                                    MaterialPageRoute(builder: (context) => nextScreen),
                                     (route) => false,
                                   );
                                 }
