@@ -50,4 +50,44 @@ class ProfileProvider extends ChangeNotifier {
     
     return exito;
   }
+  // Método para actualizar Usuario
+  Future<bool> actualizarPerfilUsuario(String nombre, String email) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final exito = await _service.updateProfile(nombre, email);
+
+    if (exito) {
+      await cargarPerfil(); // Recargamos para ver los cambios
+    } else {
+      _isLoading = false;
+      notifyListeners();
+    }
+    return exito;
+  }
+
+  // Método para actualizar Mascota
+  Future<bool> actualizarMascota(int mascotaId, String nombre, String especie, String raza, String genero, String fecha) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final datos = {
+      "nombre": nombre,
+      "especie": especie,
+      "raza": raza,
+      "genero": genero,
+      "fechaNacimiento": fecha,
+      // "foto": "" // Si manejas foto en base64
+    };
+
+    final exito = await _service.updateMascota(mascotaId, datos);
+
+    if (exito) {
+      await cargarPerfil();
+    } else {
+      _isLoading = false;
+      notifyListeners();
+    }
+    return exito;
+  }
 }

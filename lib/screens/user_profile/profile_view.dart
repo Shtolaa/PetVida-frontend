@@ -4,6 +4,8 @@ import '../../config/theme/app_theme.dart';
 import '../../providers/profile_provider.dart';
 import '../auth/login_screen.dart';
 import 'add_pet_screen.dart';
+import 'edit_profile_screen.dart';
+import 'edit_pet_screen.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -51,8 +53,10 @@ class _ProfileViewState extends State<ProfileView> {
         actions: [
           // Botón Editar (Solo visual por ahora)
           TextButton(
-            onPressed: () {},
-            child: const Text("Editar", style: TextStyle(color: AppColors.primary400, fontWeight: FontWeight.bold)),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+            },
+            child: const Text("Editar"),
           )
         ],
       ),
@@ -148,7 +152,12 @@ class _ProfileViewState extends State<ProfileView> {
                       ),
                       title: Text(mascota.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(mascota.especie),
-                      trailing: const Icon(Icons.chevron_right, color: AppColors.neutral300),
+                      trailing: IconButton( // Cambiamos el ícono por un botón de editar
+                          icon: const Icon(Icons.edit, color: AppColors.primary400),
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => EditPetScreen(mascota: mascota)));
+                          },
+                        ),
                     ),
                   );
                 },

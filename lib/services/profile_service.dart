@@ -79,4 +79,64 @@ class ProfileService {
       return false;
     }
   }
+  // 4. Modificar Perfil Usuario (PATCH /usuario/{id})
+  // Nota: Tu backend pide "multipart/form-data" con un campo 'data' y un 'file' opcional.
+  Future<bool> updateProfile(String nombre, String email) async {
+    final userId = await _getUserId();
+    final url = Uri.parse('${Environment.baseUrl}/usuario/$userId');
+    final token = (await SharedPreferences.getInstance()).getString('jwt_token') ?? '';
+
+    try {
+      var request = http.MultipartRequest('PATCH', url);
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // Tu backend espera un JSON string dentro de un campo llamado "data"
+      request.fields['data'] = jsonEncode({
+        "fullName": nombre,
+        "email": email,
+        // "telefono": telefono // Si el back lo agrega después
+      });
+
+      // TODO: Si implementas subida de imagen, aquí iría:
+      // request.files.add(await http.MultipartFile.fromPath('file', pathImagen));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        print('Error update profile: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error conexión update profile: $e');
+      return false;
+    }
+  }
+
+  // 5. Modificar Mascota (PUT /mascotas/{id})
+  // ASUMIMOS que este endpoint existirá.
+  Future<bool> updateMascota(int mascotaId, Map<String, dynamic> datos) async {
+    final url = Uri.parse('${Environment.baseUrl}/mascotas/$mascotaId'); // Asumiendo PUT
+
+    try {
+      final headers = await _getHeaders();
+      // Usamos PUT para actualizar completo, o PATCH para parcial
+      final response = await http.put( 
+        url,
+        headers: headers,
+        body: jsonEncode(datos),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        print('Error update mascota: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
 }
