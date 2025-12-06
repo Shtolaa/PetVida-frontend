@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme/app_theme.dart';
 import '../../providers/vet_provider.dart';
+import '../booking/availability_screen.dart';
 
 class VetProfileScreen extends StatefulWidget {
   final int veterinariaId;
@@ -18,6 +19,9 @@ class VetProfileScreen extends StatefulWidget {
 }
 
 class _VetProfileScreenState extends State<VetProfileScreen> {
+
+  int? _servicioSeleccionadoId; 
+  String _nombreServicioSeleccionado = "";
   @override
   void initState() {
     super.initState();
@@ -130,25 +134,30 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                           const SizedBox(height: 12),
                           
                           Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: vet.servicios.map((servicio) {
-                              return ActionChip(
-                                label: Text(servicio.nombre),
-                                backgroundColor: Colors.white,
-                                side: const BorderSide(color: AppColors.primary400),
-                                labelStyle: const TextStyle(color: AppColors.primary400, fontWeight: FontWeight.bold),
-                                onPressed: () {
-                                  // Aquí seleccionaremos el servicio para pasar a la siguiente pantalla
-                                  // Por ahora solo feedback visual
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                    content: Text("Servicio seleccionado: ${servicio.nombre}"),
-                                    duration: const Duration(seconds: 1),
-                                  ));
-                                },
-                              );
-                            }).toList(),
-                          ),
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: vet.servicios.map((servicio) {
+                                  final isSelected = _servicioSeleccionadoId == servicio.id; // ¿Es este el seleccionado?
+                                  
+                                  return ActionChip(
+                                    label: Text(servicio.nombre),
+                                    // Si está seleccionado, fondo verde y texto blanco
+                                    backgroundColor: isSelected ? AppColors.primary400 : Colors.white,
+                                    labelStyle: TextStyle(
+                                      color: isSelected ? Colors.white : AppColors.primary400, 
+                                      fontWeight: FontWeight.bold
+                                    ),
+                                    side: const BorderSide(color: AppColors.primary400),
+                                    
+                                    onPressed: () {
+                                      setState(() {
+                                        _servicioSeleccionadoId = servicio.id;
+                                        _nombreServicioSeleccionado = servicio.nombre;
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
 
                           const SizedBox(height: 40),
 
@@ -158,9 +167,34 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                             height: 54,
                             child: ElevatedButton(
                               onPressed: () {
-                                // TODO: Navegar a pantalla de Horarios
+                                if (_servicioSeleccionadoId == null) {
+                                  // Validación visual
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Por favor selecciona un servicio primero"),
+                                      backgroundColor: AppColors.warning,
+                                    )
+                                  );
+                                  return;
+                                }
+
+                                // Ahora sí pasamos el ID real
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AvailabilityScreen(
+                                      veterinariaId: widget.veterinariaId,
+                                      servicioId: _servicioSeleccionadoId!, // <--- ID REAL
+                                      nombreVeterinaria: widget.nombrePlaceholder,
+                                    ),
+                                  ),
+                                );
                               },
-                              child: const Text("Revisar Disponibilidad Global"),
+                              child: Text(
+                                _servicioSeleccionadoId == null 
+                                  ? "Selecciona un servicio" 
+                                  : "Revisar Disponibilidad ($_nombreServicioSeleccionado)"
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),
