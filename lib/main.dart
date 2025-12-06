@@ -4,6 +4,7 @@ import 'config/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'providers/home_provider.dart';
+import 'providers/profile_provider.dart';
 
 void main() {
   runApp(const PetVidaApp());
@@ -19,6 +20,7 @@ class PetVidaApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: MaterialApp(
         title: 'PetVida',

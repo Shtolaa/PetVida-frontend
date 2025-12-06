@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/theme/app_theme.dart';
-import 'home/home_view.dart'; // Crearemos esto en el siguiente paso
+import 'home/home_view.dart';
+import 'user_profile/profile_view.dart'; 
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,7 +17,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const Center(child: Text("Buscador de Veterinarias")), // Placeholder Indice 0
     const HomeView(),                                      // Indice 1 (La que haremos ahora)
-    const Center(child: Text("Perfil de Usuario")),        // Placeholder Indice 2
+    const ProfileView(),
   ];
 
   @override
