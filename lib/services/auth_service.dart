@@ -65,4 +65,44 @@ class AuthService {
     await prefs.remove('jwt_token');
     await prefs.remove('user_id');
   }
+  Future<bool> register(String fullName, String email, String password, String role) async {
+    final url = Uri.parse('${Environment.baseUrl}/auth/register');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "fullName": fullName,
+          "email": email,
+          "password": password,
+          "role": role // "CLIENTE" o "VETERINARIO"
+        }),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // El registro suele devolver el token directamente según tu OpenAPI.
+        // Así que podemos loguear al usuario automáticamente.
+        final data = LoginResponse.fromJson(jsonDecode(response.body));
+        
+        // Decodificamos y guardamos (Reutilizamos lógica de login)
+        Map<String, dynamic> decodedToken = JwtDecoder.decode(data.token);
+        String userId = decodedToken['id']?.toString() ?? decodedToken['userId']?.toString() ?? decodedToken['sub'] ?? '';
+        String userRole = decodedToken['role']?.toString() ?? 'CLIENTE';
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('jwt_token', data.token);
+        await prefs.setString('user_id', userId);
+        await prefs.setString('user_role', userRole);
+
+        return true;
+      } else {
+        print('Error Registro: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error conexión registro: $e');
+      return false;
+    }
+  }
 }

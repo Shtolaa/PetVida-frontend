@@ -4,6 +4,7 @@ import '../../config/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../main_screen.dart';
 import '../web/web_layout_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -181,7 +182,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text("¿No tienes cuenta?"),
                       TextButton(
                         onPressed: () {
-                          // TODO: Navegar a Registro
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                          );
                         },
                         child: const Text(
                           "Regístrate",

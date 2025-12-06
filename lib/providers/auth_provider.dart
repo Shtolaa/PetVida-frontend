@@ -26,7 +26,28 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners(); // Avisa que terminó
     return success;
   }
+  
   Future<String> getUserRole() async {
   return await _authService.getUserRole();
-}
+  }
+
+  Future<bool> register(String fullName, String email, String password, bool isVeterinario) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    // Determinamos el rol según el switch
+    String role = isVeterinario ? "VETERINARIO" : "CLIENTE"; 
+
+    final success = await _authService.register(fullName, email, password, role);
+
+    _isLoading = false;
+    
+    if (!success) {
+      _errorMessage = "No se pudo registrar. El correo podría estar en uso.";
+    }
+    
+    notifyListeners();
+    return success;
+  }
 }
