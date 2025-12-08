@@ -50,4 +50,15 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     return success;
   }
+
+  Future<void> logout() async {
+    // Llamamos al servicio de autenticación para borrar datos
+    await _authService.logout();
+    
+    // Opcional: También podemos limpiar SharedPreferences completamente aquí para estar seguros
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.clear();
+    
+    notifyListeners();
+  }
 }

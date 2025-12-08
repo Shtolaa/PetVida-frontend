@@ -68,7 +68,7 @@ class DashboardResponse {
 class CitaVeterinaria {
   final int idCita;
   final String fechaTexto;
-  final String nombreDueno; // El DTO no lo trae, pondremos un placeholder
+  final String nombreDueno;
   final String nombreMascota;
   final String estado;
 
@@ -81,17 +81,14 @@ class CitaVeterinaria {
   });
 
   factory CitaVeterinaria.fromJson(Map<String, dynamic> json) {
-    // 1. Armar fecha bonita desde los datos planos de Java
     final fecha = json['fecha']?.toString() ?? '';
     final hora = json['hora']?.toString() ?? '';
-    final fechaCompuesta = "$fecha $hora";
 
     return CitaVeterinaria(
-      idCita: json['id'] ?? 0, // Java manda 'id', no 'idCita'
-      fechaTexto: fechaCompuesta,
-      // OJO: AppointmentResponseDTO no trae nombre del dueño. 
-      // Si el back no lo agrega, mostraremos "Cliente" o usaremos el ID si viene.
-      nombreDueno: "Cliente", 
+      idCita: json['id'] ?? 0, 
+      fechaTexto: "$fecha $hora",
+      // Si el backend no manda 'nombreDueno', ponemos placeholder
+      nombreDueno: json['nombreDueno'] ?? "Cliente", 
       nombreMascota: json['nombreMascota'] ?? 'Mascota',
       estado: json['estado'] ?? 'PENDIENTE',
     );

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/vet_model.dart';
 import '../config/constants/environment.dart';
 
+
 class VetService {
   
   Future<Map<String, String>> _getHeaders() async {
@@ -66,7 +67,11 @@ class VetService {
 
     try {
       final headers = await _getHeaders();
+
+      print("Pidiendo detalle a: $url"); // <--- DEBUG 1
       final response = await http.get(url, headers: headers);
+      print("Respuesta Detalle: ${response.statusCode}"); // <--- DEBUG 2
+      print("Cuerpo Detalle: ${response.body}"); // <--- DEBUG 3
 
       if (response.statusCode == 200) {
         return VeterinariaDetalle.fromJson(jsonDecode(response.body));
@@ -75,6 +80,7 @@ class VetService {
       }
     } catch (e) {
       print('Error detalle vet: $e');
+      print('Error CRÍTICO detalle vet: $e'); // <--- DEBUG 4
       return null;
     }
   }

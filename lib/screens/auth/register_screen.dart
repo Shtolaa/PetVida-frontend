@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
-import '../main_screen.dart'; // Para ir al Home móvil
-import '../web/web_layout_screen.dart'; // Para ir al Dashboard web
+import '../main_screen.dart'; 
+import '../web/web_layout_screen.dart'; 
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,14 +15,13 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   
-  // Controladores
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // Opción para veterinarios (Tu idea)
-  bool _isVeterinario = false;
+  // Switch: true = VETERINARIO, false = CLIENTE
+  bool _isVeterinario = false; 
 
   @override
   Widget build(BuildContext context) {
@@ -36,10 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppColors.primary100,
-              Colors.white,
-            ],
+            colors: [AppColors.primary100, Colors.white],
           ),
         ),
         child: SafeArea(
@@ -49,99 +45,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // 1. Encabezado
                     const Icon(Icons.pets, size: 50, color: AppColors.primary400),
                     const SizedBox(height: 10),
                     Text("PetVida", style: Theme.of(context).textTheme.displayLarge?.copyWith(color: AppColors.primary400, fontSize: 32)),
-                    const SizedBox(height: 8),
-                    Text("Crea una cuenta nueva", style: Theme.of(context).textTheme.bodyLarge),
                     const SizedBox(height: 30),
 
-                    // 2. Nombre Completo
+                    // Inputs
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: "Nombre Completo",
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                      validator: (value) => value!.isEmpty ? "Ingresa tu nombre" : null,
+                      decoration: const InputDecoration(labelText: "Nombre Completo"),
+                      validator: (v) => v!.isEmpty ? "Falta nombre" : null,
                     ),
                     const SizedBox(height: 16),
-
-                    // 3. Correo
                     TextFormField(
                       controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: "Correo Electrónico",
-                        prefixIcon: Icon(Icons.email_outlined),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return 'Ingresa tu correo';
-                        if (!value.contains('@')) return 'Correo inválido';
-                        return null;
-                      },
+                      decoration: const InputDecoration(labelText: "Correo"),
+                      validator: (v) => !v!.contains('@') ? "Correo inválido" : null,
                     ),
                     const SizedBox(height: 16),
-
-                    // 4. Contraseña
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: "Contraseña",
-                        prefixIcon: Icon(Icons.lock_outline),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.length < 6) return 'Mínimo 6 caracteres';
-                        return null;
-                      },
+                      decoration: const InputDecoration(labelText: "Contraseña (Mín 8)"),
+                      // VALIDACIÓN CRÍTICA: Debe coincidir con el backend (min 8)
+                      validator: (v) => (v == null || v.length < 8) ? "Mínimo 8 caracteres" : null,
                     ),
                     const SizedBox(height: 16),
-
-                    // 5. Confirmar Contraseña
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: "Confirmar Contraseña",
-                        prefixIcon: Icon(Icons.lock_reset),
-                      ),
-                      validator: (value) {
-                        if (value != _passwordController.text) return 'Las contraseñas no coinciden';
-                        return null;
-                      },
+                      decoration: const InputDecoration(labelText: "Confirmar Contraseña"),
+                      validator: (v) => v != _passwordController.text ? "No coinciden" : null,
                     ),
                     const SizedBox(height: 16),
 
-                    // 6. Opción "Soy Veterinario" (Tu idea implementada)
+                    // SWITCH DE ROL
                     SwitchListTile(
                       title: const Text("Soy Dueño de Veterinaria"),
-                      subtitle: const Text("Crea una cuenta para gestionar tu clínica"),
+                      subtitle: const Text("Activa esto para crear cuenta de VETERINARIO"),
                       value: _isVeterinario,
                       activeColor: AppColors.primary400,
-                      contentPadding: EdgeInsets.zero,
                       onChanged: (val) {
                         setState(() => _isVeterinario = val);
+                        print("DEBUG: Switch cambiado a: $_isVeterinario");
                       },
                     ),
 
                     const SizedBox(height: 24),
 
-                    // 7. Mensaje de Error
+                    // Error UI
                     if (authProvider.errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: Text(
-                          authProvider.errorMessage!,
-                          style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
+                      Text(authProvider.errorMessage!, style: const TextStyle(color: AppColors.error)),
 
-                    // 8. Botón Registrarse
+                    // BOTÓN REGISTRAR
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -149,26 +106,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onPressed: authProvider.isLoading
                             ? null
                             : () async {
+                                print("DEBUG: Botón presionado");
+
                                 if (_formKey.currentState!.validate()) {
+                                  print("DEBUG: Formulario válido. Enviando datos...");
+                                  print("DEBUG: Rol seleccionado: ${_isVeterinario ? 'VETERINARIO' : 'CLIENTE'}");
+
                                   final success = await authProvider.register(
                                     _nameController.text,
                                     _emailController.text,
                                     _passwordController.text,
-                                    _isVeterinario,
+                                    _isVeterinario, // <--- Aquí pasamos el booleano
                                   );
 
-                                  if (success && context.mounted) {
-                                    // Redirección inteligente según el rol elegido
-                                    Widget nextScreen = _isVeterinario 
-                                        ? const WebLayoutScreen() 
-                                        : const MainScreen();
+                                  print("DEBUG: Resultado del registro: $success");
 
+                                  if (success && context.mounted) {
+                                    // Redirección
+                                    Widget nextScreen = _isVeterinario 
+                                        ? const WebLayoutScreen() // Dashboard para Vets
+                                        : const MainScreen();     // App para Clientes
+
+                                    print("DEBUG: Navegando a ${nextScreen.toString()}");
                                     Navigator.pushAndRemoveUntil(
                                       context,
                                       MaterialPageRoute(builder: (_) => nextScreen),
                                       (route) => false,
                                     );
                                   }
+                                } else {
+                                  print("DEBUG: Formulario INVÁLIDO (Revisar campos en rojo)");
                                 }
                               },
                         child: authProvider.isLoading
@@ -176,23 +143,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             : const Text("Registrarse"),
                       ),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // 9. Volver al Login
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text("¿Ya tienes cuenta?"),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            "Inicia Sesión",
-                            style: TextStyle(color: AppColors.primary400, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
+                    
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Volver al Login"),
+                    )
                   ],
                 ),
               ),

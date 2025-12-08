@@ -6,6 +6,7 @@ import '../auth/login_screen.dart';
 import 'add_pet_screen.dart'; 
 import 'edit_profile_screen.dart';
 import 'edit_pet_screen.dart';
+import '../../widgets/pet_avatar.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -140,17 +141,12 @@ class _ProfileViewState extends State<ProfileView> {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppColors.neutral200),
                     ),
-                    child: ListTile(
-                      // --- CORRECCIÓN FOTO MASCOTA ---
-                      leading: CircleAvatar(
-                        backgroundColor: AppColors.primary100,
-                        backgroundImage: (mascota.fotoUrl.isNotEmpty && mascota.fotoUrl.startsWith("http")) 
-                          ? NetworkImage(mascota.fotoUrl) 
-                          : null,
-                        child: (mascota.fotoUrl.isEmpty || !mascota.fotoUrl.startsWith("http")) 
-                          ? const Icon(Icons.pets, color: AppColors.primary400)
-                          : null,
-                      ),
+                      child: ListTile(
+                          // USAMOS EL NUEVO WIDGET AQUÍ
+                          leading: PetAvatar(
+                            imageString: mascota.fotoUrl, // Pasamos el string que viene del backend
+                            radius: 25,
+                          ),
                       // -------------------------------
                       title: Text(mascota.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(mascota.especie),

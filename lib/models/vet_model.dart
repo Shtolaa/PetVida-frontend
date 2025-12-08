@@ -18,16 +18,23 @@ class Veterinaria {
   factory Veterinaria.fromJson(Map<String, dynamic> json) {
     return Veterinaria(
       id: json['id'] ?? 0,
-      nombre: json['nombre'] ?? 'Sin Nombre',
-      direccion: json['direccion'] ?? 'Sin dirección',
-      // Convertimos a double de forma segura (por si viene int)
-      calificacion: (json['calificacion'] ?? 0).toDouble(),
-      estaAbierto: json['estaAbierto'] ?? false,
-      imagenUrl: json['imagenUrl'] ?? '',
+      // --- CAMBIO CLAVE: Soporte bilingüe (Español o Inglés) ---
+      nombre: json['nombre'] ?? json['name'] ?? 'Sin Nombre',
+      direccion: json['direccion'] ?? json['address'] ?? 'Sin dirección',
+      
+      // Calificación: rating (Java) o calificacion (Flutter antiguo)
+      calificacion: (json['calificacion'] ?? json['rating'] ?? 0).toDouble(),
+      
+      // Abierto: isOpen (Java) o estaAbierto (Flutter antiguo)
+      estaAbierto: json['estaAbierto'] ?? json['isOpen'] ?? false,
+      
+      // Imagen: imageUrl (Java) o imagenUrl (Flutter antiguo)
+      imagenUrl: json['imagenUrl'] ?? json['imageUrl'] ?? '',
+      // ---------------------------------------------------------
     );
   }
-  
 }
+
 // Clase para los servicios que ofrece la veterinaria
 class ServicioVet {
   final int id;
@@ -38,13 +45,12 @@ class ServicioVet {
   factory ServicioVet.fromJson(Map<String, dynamic> json) {
     return ServicioVet(
       id: json['id'] ?? 0,
-      nombre: json['nombre'] ?? '',
+      nombre: json['nombre'] ?? json['name'] ?? '', // También aquí por si acaso
     );
   }
 }
 
-// Clase Detalle (Hereda lo básico o lo definimos completo)
-// Para simplificar el mapeo, lo definimos completo según el JSON de respuesta
+// Clase Detalle
 class VeterinariaDetalle {
   final int id;
   final String nombre;
@@ -67,16 +73,21 @@ class VeterinariaDetalle {
   });
 
   factory VeterinariaDetalle.fromJson(Map<String, dynamic> json) {
-    var listServicios = json['servicios'] as List? ?? [];
+    var listServicios = json['servicios'] ?? json['services'] as List? ?? []; // services en Java
+    
     return VeterinariaDetalle(
       id: json['id'] ?? 0,
-      nombre: json['nombre'] ?? '',
-      descripcion: json['descripcion'] ?? '',
-      direccion: json['direccion'] ?? '',
-      horarioAtencion: json['horarioAtencion'] ?? '',
-      calificacion: (json['calificacion'] ?? 0).toDouble(),
-      imagenUrl: json['imagenUrl'] ?? '',
-      servicios: listServicios.map((s) => ServicioVet.fromJson(s)).toList(),
+      // --- CAMBIOS TAMBIÉN AQUÍ PARA EL DETALLE ---
+      nombre: json['nombre'] ?? json['name'] ?? '',
+      descripcion: json['descripcion'] ?? json['description'] ?? '',
+      direccion: json['direccion'] ?? json['address'] ?? '',
+      // Java llama a esto 'attentionTimeText' según tu entidad, lo agregamos:
+      horarioAtencion: json['horarioAtencion'] ?? json['attentionTimeText'] ?? '',
+      
+      calificacion: (json['calificacion'] ?? json['rating'] ?? 0).toDouble(),
+      imagenUrl: json['imagenUrl'] ?? json['imageUrl'] ?? '',
+      
+      servicios: (listServicios as List).map((s) => ServicioVet.fromJson(s)).toList(),
     );
   }
 }

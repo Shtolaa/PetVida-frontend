@@ -16,7 +16,7 @@ class WebDashboardService {
   }
 
   // GET /veterinarias/{id}/dashboard
-  Future<DashboardResponse?> getDashboardMetrics(int idVeterinaria) async {
+    Future<DashboardResponse> getDashboardMetrics(int idVeterinaria) async { // Ya no es nullable (?)
     final url = Uri.parse('${Environment.baseUrl}/veterinarias/$idVeterinaria/dashboard');
 
     try {
@@ -26,23 +26,26 @@ class WebDashboardService {
       if (response.statusCode == 200) {
         return DashboardResponse.fromJson(jsonDecode(response.body));
       } else {
-        print('Error Dashboard KPIs: ${response.statusCode}');
-        return null;
+        print('Backend sin datos (${response.statusCode}), usando Ceros.');
+        return _getEmptyDashboard(); // <--- CAMBIO AQUÍ
       }
     } catch (e) {
-      print('Error conexión Dashboard: $e');
-      return null;
+      print('Error conexión Dashboard: $e. Usando Ceros.');
+      return _getEmptyDashboard(); // <--- CAMBIO AQUÍ
     }
   }
 
-  // GET /veterinarias/{id}/citas (Tabla)
-  Future<List<CitaVeterinaria>> getCitasVeterinaria(int idVeterinaria) async {
-    // Podrías agregar ?page=0&size=10 aquí si quisieras paginar
+Future<List<CitaVeterinaria>> getCitasVeterinaria(int idVeterinaria) async {
     final url = Uri.parse('${Environment.baseUrl}/veterinarias/$idVeterinaria/citas');
 
     try {
       final headers = await _getHeaders();
       final response = await http.get(url, headers: headers);
+
+      // --- DEBUG ---
+      print("STATUS CITAS WEB: ${response.statusCode}");
+      print("BODY CITAS WEB: ${response.body}");
+      // -------------
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -74,5 +77,50 @@ class WebDashboardService {
       print('Error conexión cancelar (Web): $e');
       return false;
     }
+  }
+  Future<int?> getMyVeterinaryId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('user_id');
+    if (userId == null) return null;
+
+    final url = Uri.parse('${Environment.baseUrl}/veterinarias/usuario/$userId');
+
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(url, headers: headers);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['id']; // Extraemos solo el ID de la clínica
+      }
+      return null;
+    } catch (e) {
+      print("Error obteniendo ID veterinaria: $e");
+      return null;
+    }
+  }
+  DashboardResponse _getEmptyDashboard() {
+    return DashboardResponse(
+      horasAgendadas: KpiItem(valor: 0, tendencia: "NEUTRA", mensajeTendencia: "Sin datos"),
+      horasCanceladas: KpiItem(valor: 0, tendencia: "NEUTRA", mensajeTendencia: "Sin datos"),
+      interacciones: KpiItem(valor: 0, tendencia: "NEUTRA", mensajeTendencia: "Sin datos"),
+      horasHoy: KpiItem(valor: 0, tendencia: "NEUTRA", mensajeTendencia: "Sin datos"),
+      tituloGrafico: "Resumen (Sin datos)",
+      datosGrafico: [], // Gráfico vacío
+    );
+  }
+  Future<String> getVeterinaryName(int idVeterinaria) async {
+    final url = Uri.parse('${Environment.baseUrl}/veterinarias/$idVeterinaria');
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(url, headers: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['nombre'] ?? 'Mi Veterinaria';
+      }
+    } catch (e) {
+      print("Error obteniendo nombre vet: $e");
+    }
+    return "Mi Veterinaria";
   }
 }

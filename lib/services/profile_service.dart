@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/profile_models.dart';
 import '../config/constants/environment.dart';
+import 'dart:io';
 
 class ProfileService {
   
@@ -50,43 +51,48 @@ class ProfileService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear(); // Borra token, user_id y cualquier otra cosa
   }
-// 3. Agregar Mascota (POST /mascotas con Multipart y ID automático)
-  Future<bool> createMascota(Map<String, dynamic> mascotaData) async {
+// 3. Agregar Mascota (POST /mascotas con Multipart, ID auto y FOTO)
+  Future<bool> createMascota(Map<String, dynamic> mascotaData, File? imagenFile) async { // <--- 1. Nuevo parámetro
     final url = Uri.parse('${Environment.baseUrl}/mascotas');
     
     try {
-      // 1. OBTENEMOS TOKEN Y USER ID GUARDADOS
+      // OBTENEMOS TOKEN Y USER ID
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token') ?? '';
       final userIdStr = prefs.getString('user_id');
 
-      // Validación de seguridad
       if (userIdStr == null) {
-        print("ERROR CRÍTICO: No se encontró el ID del usuario en sesión.");
+        print("ERROR CRÍTICO: No se encontró el ID del usuario.");
         return false;
       }
-
-      // Convertimos el ID a número (Java espera Long/Integer)
       final int ownerId = int.parse(userIdStr);
 
-      // 2. Preparamos la petición Multipart
+      // PREPARAMOS LA PETICIÓN
       var request = http.MultipartRequest('POST', url);
       request.headers['Authorization'] = 'Bearer $token';
 
-      // 3. TRADUCCIÓN DE CAMPOS (Español -> Inglés para Java)
+      // DATOS JSON
       final datosParaJava = {
         "name": mascotaData['nombre'],
         "species": mascotaData['especie'], 
         "breed": mascotaData['raza'],
         "gender": mascotaData['genero'],
         "birthDate": mascotaData['fechaNacimiento'],
-        "ownerId": ownerId // <--- AQUÍ USAMOS EL ID REAL QUE RECUPERAMOS
+        "ownerId": ownerId 
       };
-
-      // 4. Agregamos el JSON al campo 'data'
       request.fields['data'] = jsonEncode(datosParaJava);
 
-      // 5. Enviamos
+      // --- 2. LÓGICA NUEVA: ADJUNTAR LA IMAGEN ---
+      if (imagenFile != null) {
+        // 'imagen' debe coincidir con @RequestPart("imagen") del Backend
+        request.files.add(await http.MultipartFile.fromPath(
+          'imagen', 
+          imagenFile.path
+        ));
+      }
+      // -------------------------------------------
+
+      // ENVIAR
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -137,32 +143,34 @@ class ProfileService {
     }
   }
 
-  // 5. Modificar Mascota (PATCH /mascotas/{id} con Multipart)
-  Future<bool> updateMascota(int mascotaId, Map<String, dynamic> datos) async {
+// 5. Modificar Mascota (PATCH con FOTO)
+  Future<bool> updateMascota(int mascotaId, Map<String, dynamic> datos, File? imagenFile) async {
     final url = Uri.parse('${Environment.baseUrl}/mascotas/$mascotaId');
     final token = (await SharedPreferences.getInstance()).getString('jwt_token') ?? '';
 
     try {
-      // CAMBIO CLAVE: Usamos MultipartRequest en lugar de post/put simple
       var request = http.MultipartRequest('PATCH', url);
       request.headers['Authorization'] = 'Bearer $token';
 
-      // El backend espera los datos en un campo llamado 'data' como string JSON
-      // Mapeamos los nombres de campos de Flutter a los del DTO de Java (PetUpdateDTO)
-      final datosParaBackend = {
+      // Datos JSON
+      final datosParaJava = {
         "nombre": datos['nombre'],
         "especie": datos['especie'],
         "raza": datos['raza'],
         "genero": datos['genero'],
         "fechaNacimiento": datos['fechaNacimiento']
       };
+      request.fields['data'] = jsonEncode(datosParaJava);
 
-      request.fields['data'] = jsonEncode(datosParaBackend);
+      // ADJUNTAR FOTO (Si hay nueva)
+      if (imagenFile != null) {
+        // OJO: El backend 'PetController.updatePet' espera "file", NO "imagen"
+        request.files.add(await http.MultipartFile.fromPath(
+          'file', // <--- Nombre clave correcto según tu Java
+          imagenFile.path
+        ));
+      }
 
-      // Si en el futuro agregas foto, sería:
-      // if (pathFoto != null) request.files.add(...)
-
-      // Enviamos
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -173,7 +181,7 @@ class ProfileService {
         return false;
       }
     } catch (e) {
-      print('Error conexión update mascota: $e');
+      print('Error conexión update: $e');
       return false;
     }
   }

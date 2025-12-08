@@ -14,25 +14,48 @@ class WebDashboardProvider extends ChangeNotifier {
   List<CitaVeterinaria> _citas = [];
   List<CitaVeterinaria> get citas => _citas;
 
-  // ID Temporal de la veterinaria (En el futuro esto viene del login)
-  final int _currentVetId = 1; 
+  String _nombreVeterinaria = "Cargando...";
+  String get nombreVeterinaria => _nombreVeterinaria;
 
-  Future<void> cargarDashboard() async {
+  // ID Temporal de la veterinaria (En el futuro esto viene del login)
+  int? _currentVetId;
+
+Future<void> cargarDashboard() async {
     _isLoading = true;
     notifyListeners();
 
-    // Cargamos ambas cosas en paralelo
-    final results = await Future.wait([
-      _service.getDashboardMetrics(_currentVetId),
-      _service.getCitasVeterinaria(_currentVetId),
-    ]);
+    // 1. Si no tenemos el ID de la clínica, lo buscamos primero
+    if (_currentVetId == null) {
+      _currentVetId = await _service.getMyVeterinaryId();
+      
+      if (_currentVetId == null) {
+        // Si sigue nulo (ej: el usuario no tiene clínica), paramos aquí
+        print("Error: Este usuario no tiene clínica asociada.");
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+    }
 
-    _metrics = results[0] as DashboardResponse?;
-    _citas = results[1] as List<CitaVeterinaria>;
+    // 2. Ahora cargamos los datos usando el ID real
+    try {
+      final results = await Future.wait([
+        _service.getDashboardMetrics(_currentVetId!),
+        _service.getCitasVeterinaria(_currentVetId!),
+        _service.getVeterinaryName(_currentVetId!),
+      ]);
+
+      _metrics = results[0] as DashboardResponse?;
+      _citas = results[1] as List<CitaVeterinaria>;
+      _nombreVeterinaria = results[2] as String;
+    } catch (e) {
+      print("Error cargando datos dashboard: $e");
+    }
 
     _isLoading = false;
     notifyListeners();
   }
+
   Future<bool> cancelarCita(int idCita) async {
     // 1. Mostramos carga (opcional, o dejamos que el spinner de la tabla actúe al recargar)
     _isLoading = true;

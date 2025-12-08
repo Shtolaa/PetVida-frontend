@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme/app_theme.dart';
 import '../../providers/profile_provider.dart';
-import '../../models/profile_models.dart'; // Para MascotaResumen
+import '../../models/profile_models.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import '../../widgets/pet_avatar.dart'; // Para MascotaResumen
 
 class EditPetScreen extends StatefulWidget {
   final MascotaResumen mascota; // Recibimos la mascota a editar
@@ -21,6 +24,15 @@ class _EditPetScreenState extends State<EditPetScreen> {
 
   String _especieSeleccionada = 'Canino';
   String _generoSeleccionado = 'Macho';
+  File? _imagenNueva;
+
+  Future<void> _seleccionarFoto() async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      setState(() => _imagenNueva = File(pickedFile.path));
+    }
+  }
 
   @override
   void initState() {
@@ -60,16 +72,34 @@ class _EditPetScreenState extends State<EditPetScreen> {
         child: Column(
           children: [
             // Foto Mascota
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: AppColors.neutral200,
-              backgroundImage: widget.mascota.fotoUrl.isNotEmpty 
-                  ? NetworkImage(widget.mascota.fotoUrl) 
-                  : null,
-              child: widget.mascota.fotoUrl.isEmpty 
-                  ? const Icon(Icons.pets, size: 40, color: AppColors.neutral500)
-                  : null,
-            ),
+            Center(
+                child: GestureDetector(
+                  onTap: _seleccionarFoto,
+                  child: Stack(
+                    children: [
+                      // Usamos nuestro widget inteligente
+                      PetAvatar(
+                        radius: 50,
+                        // Si hay foto nueva, la muestra. Si no, muestra la que viene del backend
+                        imageFile: _imagenNueva,
+                        imageString: widget.mascota.fotoUrl, 
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary400,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
             const SizedBox(height: 20),
 
             TextFormField(
@@ -112,14 +142,15 @@ class _EditPetScreenState extends State<EditPetScreen> {
               height: 50,
               child: ElevatedButton(
                 onPressed: provider.isLoading ? null : () async {
-                  final success = await provider.actualizarMascota(
-                    widget.mascota.id,
-                    _nombreController.text,
-                    _especieSeleccionada,
-                    _razaController.text,
-                    _generoSeleccionado,
-                    "2020-01-01", // Fecha simulada porque no tenemos input
-                  );
+                      final success = await provider.actualizarMascota(
+                        widget.mascota.id,
+                        _nombreController.text,
+                        _especieSeleccionada,
+                        _razaController.text,
+                        _generoSeleccionado,
+                        "2020-01-01", // O usa un controller de fecha real
+                        _imagenNueva, // <--- Enviamos la foto nueva (o null si no cambió)
+                      );
                   
                   if (success && mounted) {
                     Navigator.pop(context);

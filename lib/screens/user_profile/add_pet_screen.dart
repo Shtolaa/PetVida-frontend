@@ -1,6 +1,8 @@
+import 'dart:io'; // Para manejar el archivo
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart'; // Librería de imágenes
 import '../../config/theme/app_theme.dart';
 import '../../providers/profile_provider.dart';
 
@@ -14,14 +16,28 @@ class AddPetScreen extends StatefulWidget {
 class _AddPetScreenState extends State<AddPetScreen> {
   final _formKey = GlobalKey<FormState>();
   
-  // Controladores
   final _nombreController = TextEditingController();
   final _razaController = TextEditingController();
-  final _fechaController = TextEditingController(); // Solo para mostrar texto
+  final _fechaController = TextEditingController();
   
   String _especieSeleccionada = 'Canino';
   String _generoSeleccionado = 'Macho';
-  String _fechaBackend = ''; // Formato YYYY-MM-DD para enviar
+  String _fechaBackend = '';
+
+  // Variable para guardar la foto seleccionada
+  File? _imagenSeleccionada;
+
+  // Método para abrir la galería
+  Future<void> _seleccionarFoto() async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imagenSeleccionada = File(pickedFile.path);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,38 +58,55 @@ class _AddPetScreenState extends State<AddPetScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Foto Placeholder (Círculo con ícono)
+              // 1. SELECCIONAR FOTO
               Center(
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: AppColors.neutral200,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.neutral300),
-                      ),
-                      child: const Icon(Icons.pets, size: 50, color: AppColors.neutral500),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary400,
+                child: GestureDetector(
+                  onTap: _seleccionarFoto, // Al tocar abre la galería
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: AppColors.neutral200,
                           shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.neutral300),
+                          // Si hay imagen seleccionada, la mostramos
+                          image: _imagenSeleccionada != null
+                              ? DecorationImage(
+                                  image: FileImage(_imagenSeleccionada!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                         ),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                        // Si NO hay imagen, mostramos el ícono
+                        child: _imagenSeleccionada == null
+                            ? const Icon(Icons.pets, size: 50, color: AppColors.neutral500)
+                            : null,
                       ),
-                    )
-                  ],
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary400,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               ),
+              const SizedBox(height: 10),
+              Center(child: Text("Toca para subir foto", style: TextStyle(fontSize: 12, color: AppColors.neutral500))),
               const SizedBox(height: 30),
 
-              // 2. Nombre
+              // ... (El resto de los campos: Nombre, Especie, Raza... Sigue IGUAL) ...
+              // Solo copia los inputs que ya tenías aquí abajo
+              
               Text("Nombre de la mascota", style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               TextFormField(
@@ -83,7 +116,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 3. Especie
               Text("Especie", style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
@@ -92,13 +124,13 @@ class _AddPetScreenState extends State<AddPetScreen> {
                 items: const [
                   DropdownMenuItem(value: "Canino", child: Text("Perro")),
                   DropdownMenuItem(value: "Felino", child: Text("Gato")),
+                  DropdownMenuItem(value: "Ave", child: Text("Ave")),
                   DropdownMenuItem(value: "Exotico", child: Text("Exótico")),
                 ],
                 onChanged: (val) => setState(() => _especieSeleccionada = val!),
               ),
               const SizedBox(height: 20),
 
-              // 4. Raza
               Text("Raza", style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               TextFormField(
@@ -108,7 +140,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 5. Género
               Text("Género", style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               Row(
@@ -120,12 +151,11 @@ class _AddPetScreenState extends State<AddPetScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 6. Fecha de Nacimiento
               Text("Fecha de nacimiento", style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _fechaController,
-                readOnly: true, // No se puede escribir, solo tocar
+                readOnly: true,
                 decoration: const InputDecoration(
                   hintText: "Seleccionar fecha",
                   suffixIcon: Icon(Icons.calendar_today, color: AppColors.primary400),
@@ -136,7 +166,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
 
               const SizedBox(height: 40),
 
-              // 7. Botones de Acción
+              // Botones
               Row(
                 children: [
                   Expanded(
@@ -154,9 +184,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: profileProvider.isLoading 
-                        ? null 
-                        : _guardarMascota,
+                      onPressed: profileProvider.isLoading ? null : _guardarMascota,
                       child: profileProvider.isLoading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Text("Guardar"),
@@ -171,7 +199,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
     );
   }
 
-  // Widget para botones de género tipo "Píldora"
+  // ... (Tus métodos _buildGenderOption y _seleccionarFecha siguen IGUAL) ...
   Widget _buildGenderOption(String genero) {
     final isSelected = _generoSeleccionado == genero;
     return GestureDetector(
@@ -197,7 +225,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
     );
   }
 
-  // Lógica del DatePicker
   Future<void> _seleccionarFecha() async {
     DateTime? picked = await showDatePicker(
       context: context,
@@ -216,9 +243,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
 
     if (picked != null) {
       setState(() {
-        // Formato para mostrar al usuario: 10/12/2023
         _fechaController.text = DateFormat('dd/MM/yyyy').format(picked);
-        // Formato para el backend: 2023-12-10
         _fechaBackend = DateFormat('yyyy-MM-dd').format(picked);
       });
     }
@@ -226,18 +251,21 @@ class _AddPetScreenState extends State<AddPetScreen> {
 
   void _guardarMascota() async {
     if (_formKey.currentState!.validate()) {
+      // 1. Obtenemos el provider
       final provider = Provider.of<ProfileProvider>(context, listen: false);
       
+      // 2. Llamamos a registrar pasando los datos Y LA IMAGEN
       final exito = await provider.registrarMascota(
         _nombreController.text,
         _especieSeleccionada,
         _razaController.text,
         _generoSeleccionado,
         _fechaBackend,
+        _imagenSeleccionada, // <--- Pasamos el archivo aquí
       );
 
       if (exito && mounted) {
-        Navigator.pop(context); // Volver al perfil
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Mascota agregada con éxito"), backgroundColor: AppColors.success),
         );

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../../../../providers/auth_provider.dart';
+import '../../auth/login_screen.dart';
 
 class SideMenu extends StatelessWidget {
   final int selectedIndex;
@@ -68,18 +71,36 @@ class SideMenu extends StatelessWidget {
           // 3. SETTINGS Y LOGOUT
           const Divider(),
           _DrawerListTile(
-            title: "Settings",
-            icon: Icons.settings_outlined,
-            isSelected: selectedIndex == 4,
-            onTap: () => onIndexChanged(4),
-          ),
-          _DrawerListTile(
             title: "Logout",
             icon: Icons.logout,
-            isSelected: false,
-            onTap: () {
-              // TODO: Lógica de Logout
-              Navigator.pop(context); // Temporal
+            isSelected: false, // El logout nunca se queda seleccionado
+            onTap: () async {
+              // 1. Mostrar diálogo de confirmación (Opcional pero recomendado)
+              final confirmar = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Cerrar Sesión"),
+                  content: const Text("¿Estás seguro de que deseas salir?"),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancelar")),
+                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Salir", style: TextStyle(color: AppColors.error))),
+                  ],
+                ),
+              );
+
+              if (confirmar == true && context.mounted) {
+                // 2. Ejecutar Logout
+                await Provider.of<AuthProvider>(context, listen: false).logout();
+
+                if (context.mounted) {
+                  // 3. Redirigir al Login y borrar historial
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
+              }
             },
           ),
           const SizedBox(height: 20),

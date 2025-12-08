@@ -32,7 +32,7 @@ class _WebLayoutScreenState extends State<WebLayoutScreen> {
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. SIDEBAR (Ocupa 250px fijos o un porcentaje)
+          // 1. SIDEBAR (Ocupa 250px fijos)
           SizedBox(
             width: 250,
             child: SideMenu(
@@ -47,7 +47,7 @@ class _WebLayoutScreenState extends State<WebLayoutScreen> {
           Expanded(
             child: Column(
               children: [
-                // Header Superior (Buscador y Perfil)
+                // Header Superior (Buscador y Perfil Dinámico)
                 _buildWebHeader(),
                 
                 // Contenido cambiante
@@ -67,6 +67,9 @@ class _WebLayoutScreenState extends State<WebLayoutScreen> {
 
   // Header blanco superior
   Widget _buildWebHeader() {
+    // 1. OBTENER EL NOMBRE DEL PROVIDER
+    final nombreVet = Provider.of<WebDashboardProvider>(context).nombreVeterinaria;
+
     return Container(
       height: 70,
       color: Colors.white,
@@ -92,28 +95,35 @@ class _WebLayoutScreenState extends State<WebLayoutScreen> {
               ),
             ),
           ),
+          
           const Spacer(),
+          
           // Perfil a la derecha
-          const CircleAvatar(
-            backgroundImage: NetworkImage("https://via.placeholder.com/150"),
-            backgroundColor: AppColors.neutral200,
+          CircleAvatar(
+            backgroundColor: AppColors.primary100, // Verde suave corporativo
+            child: const Icon(Icons.store, color: AppColors.primary400),
           ),
           const SizedBox(width: 10),
-          const Text("Veterinaria Ejemplo 1", style: TextStyle(fontWeight: FontWeight.bold)),
+          
+          // 2. MOSTRAR NOMBRE DINÁMICO
+          Text(
+            nombreVet, // <--- Aquí usamos la variable
+            style: const TextStyle(fontWeight: FontWeight.bold)
+          ),
         ],
       ),
     );
   }
 
   // Switch para cambiar de vistas
-    Widget _buildContent(int index) {
-        switch (index) {
-          case 0:
-            return const DashboardView();
-          case 2:
-            return const ReservationsView();
-          default:
-            return Center(child: Text("Página en construcción (Index: $index)"));
-        }
-      }
+  Widget _buildContent(int index) {
+    switch (index) {
+      case 0:
+        return const DashboardView();
+      case 2:
+        return const ReservationsView();
+      default:
+        return Center(child: Text("Página en construcción (Index: $index)"));
+    }
+  }
 }
